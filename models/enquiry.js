@@ -14,7 +14,7 @@ const enquirySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    claimed_by: {
+    claimedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
       default: null,

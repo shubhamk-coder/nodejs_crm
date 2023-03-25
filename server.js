@@ -1,13 +1,20 @@
 import express from "express";
 import mongoose from "mongoose";
-import jwt from "jsonwebtokenon";
+import jwt from "jsonwebtoken";
+import Enquiry from "./models/enquiry.js";
+import Employee from "./models/employee.js";
+import { config } from "dotenv";
 
 const app = express();
-const port = 3000;
+config();
+
+const port = process.env.PORT || 3000;
+const mongoUrl = process.env.MONGO_URL;
+const jwtSecret = process.env.JWT_SECRET;
 
 // connect to MongoDB database
 mongoose
-  .connect("mongodb://localhost:27017/crm", {
+  .connect(mongoUrl, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -18,48 +25,12 @@ mongoose
     console.error("Error connecting to MongoDB database:", err.message);
   });
 
-// define database schema
-const employeeSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-});
-
-const enquirySchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-  },
-  course_interest: {
-    type: String,
-    required: true,
-  },
-  claimed_by: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Employee",
-    default: null,
-  },
-});
-
-const Employee = mongoose.model("Employee", employeeSchema);
-const Enquiry = mongoose.model("Enquiry", enquirySchema);
-
 // middleware to authenticate JWT token
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (authHeader) {
     const token = authHeader.split(" ")[1];
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, jwtSecret, (err, user) => {
       if (err) {
         return res.status(403).json({ message: "Authentication failed" });
       }
@@ -74,8 +45,8 @@ const authenticateJWT = (req, res, next) => {
 // employee registration endpoint
 app.post("/api/auth/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const employee = new Employee({ email, password });
+    const { name, email, password } = req.body;
+    const employee = new Employee({ name, email, password });
     await employee.save();
     res.json({ message: "Employee registered successfully" });
   } catch (err) {
@@ -91,7 +62,7 @@ app.post("/api/auth/login", async (req, res) => {
     if (!employee || employee.password !== password) {
       throw new Error("Invalid email or password");
     }
-    const token = jwt.sign({ email: employee.email }, process.env.JWT_SECRET);
+    const token = jwt.sign({ email: employee.email }, jwtSecret);
     res.json({ token });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -152,6 +123,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong" });
 });
 
+app.get("/", (req, res) => {
+  res.send("Hello Server!");
+});
 // start the server
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

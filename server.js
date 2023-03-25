@@ -123,9 +123,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong" });
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello Server!");
-});
 // start the server
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

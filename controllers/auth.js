@@ -1,5 +1,8 @@
 import Employee from "../models/employee.js";
+import { config } from "dotenv";
+config();
 
+const jwtSecret = process.env.JWT_SECRET;
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;

@@ -1,4 +1,5 @@
 import Employee from "../models/employee.js";
+import { jwt } from "jsonwebtoken";
 import { config } from "dotenv";
 config();
 
